@@ -76,7 +76,7 @@ export const TopStudentPartTwo:React.FC=()=>{
  const musicFade=interpolate(f,[0,8,PART_TWO_DURATION-10,PART_TWO_DURATION],[.8,1,1,.8],clamp);
  return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 32%,#15304c 0%,#081522 48%,#040a12 100%)',overflow:'hidden'}}>
   <Audio src={staticFile('top-student/source/full-dialogue-sync.wav')} trimBefore={PART_TWO_START} trimAfter={PART_TWO_START+PART_TWO_DURATION} volume={.70}/>
-  <Audio src={staticFile('top-student/source/music.mp3')} trimBefore={PART_TWO_START} volume={(talking?.065:.10)*musicFade}/>
+  <Audio src={staticFile('top-student/source/music.mp3')} trimBefore={PART_TWO_START} volume={(talking?.065:.10)*musicFade*1.15}/>
   {effects.map((x,i)=><Sequence key={i} from={x.at}><Audio src={staticFile(`top-student/sfx/${x.file}`)} volume={x.volume}/></Sequence>)}
   <div style={{position:'absolute',inset:0,opacity:.16,backgroundImage:'linear-gradient(#6b89a522 1px,transparent 1px),linear-gradient(90deg,#6b89a522 1px,transparent 1px)',backgroundSize:'54px 54px'}}/>
   <div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#02060ddd 0%,transparent 25%,transparent 75%,#02060ddd 100%)'}}/>

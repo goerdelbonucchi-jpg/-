@@ -3,7 +3,6 @@ import captionData from './opening-captions';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   Sequence,
   interpolate,
   spring,
@@ -58,23 +57,21 @@ const SpeakerTag: React.FC<{side:'left'|'right';label:string;active:boolean;colo
 };
 
 // CSS masks preserve the supplied cutout alpha while tinting only the linework.
-const CharacterLayer: React.FC<{active:Speaker|null; appearance?:'tinted'|'monochrome'}> = ({active,appearance='tinted'}) => {
+const CharacterLayer: React.FC<{active:Speaker|null}> = ({active}) => {
   const frame=useCurrentFrame();
   return <>
     {(['student','teacher'] as const).map((speaker)=>{
       const student=speaker==='student';
       const speaking=active===speaker;
-      const color=student?STUDENT:appearance==='monochrome'?'#ffffff':BLUE;
-      const opacity=speaking?1:appearance==='monochrome'?.12:student?0:.035;
+      const color=student?STUDENT:'#ffffff';
+      const opacity=speaking?1:.12;
       const mask=`url("${staticFile(`top-student/${speaker}-cutout.png`)}")`;
-      return <div key={speaker} style={{position:'absolute',left:student?42:undefined,right:student?undefined:26,bottom:student?45:34,width:student?410:690,height:student?658:832,opacity,transform:`translateY(${Math.sin(frame/18)*3}px) scale(${speaking?1.02:.98})`,transformOrigin:'50% 90%',filter:speaking?(appearance==='monochrome'&&!student?'drop-shadow(0 0 5px #ffffff22)':`drop-shadow(0 0 15px ${color}66)`):'none'}}>
-        {!student&&appearance==='monochrome'
-          ? <Img src={staticFile('top-student/teacher-monochrome.png')} style={{position:'absolute',left:'-13.5%',bottom:'-2%',width:'127%',height:'103%',objectFit:'fill'}}/>
-          : <div style={{position:'absolute',inset:0,background:color,maskImage:mask,WebkitMaskImage:mask,maskSize:'contain',WebkitMaskSize:'contain',maskRepeat:'no-repeat',WebkitMaskRepeat:'no-repeat',maskPosition:'center bottom',WebkitMaskPosition:'center bottom'}}/>}
+      return <div key={speaker} style={{position:'absolute',left:student?42:undefined,right:student?undefined:26,bottom:student?45:34,width:student?410:690,height:student?658:832,opacity,transform:`translateY(${Math.sin(frame/18)*3}px) scale(${speaking?1.02:.98})`,transformOrigin:'50% 90%',filter:speaking?(!student?'drop-shadow(0 0 5px #ffffff22)':`drop-shadow(0 0 15px ${color}66)`):'none'}}>
+        <div style={{position:'absolute',inset:0,background:color,maskImage:mask,WebkitMaskImage:mask,maskSize:'contain',WebkitMaskSize:'contain',maskRepeat:'no-repeat',WebkitMaskRepeat:'no-repeat',maskPosition:'center bottom',WebkitMaskPosition:'center bottom'}}/>
       </div>;
     })}
     <SpeakerTag side="left" label="学生" active={active==='student'} color={STUDENT}/>
-    <SpeakerTag side="right" label="学霸" active={active==='teacher'} color={appearance==='monochrome'?'#ffffff':BLUE}/>
+    <SpeakerTag side="right" label="学霸" active={active==='teacher'} color="#ffffff"/>
   </>;
 };
 
@@ -155,6 +152,6 @@ const sfx=[
 
 const AudioMix:React.FC=()=>{const frame=useCurrentFrame();const talking=lines.some((line)=>frame>=line.start&&frame<line.end);return <><Audio src={staticFile('top-student/source/music.mp3')} volume={talking?.065:.10}/><Audio src={staticFile('top-student/source/full-dialogue-sync.wav')} volume={.70}/>{sfx.map((x,i)=><Sequence key={`${x.at}-${i}`} from={x.at}><Audio src={staticFile(`top-student/sfx/${x.file}`)} volume={x.volume}/></Sequence>)}</>};
 
-export const TopStudentSample:React.FC=()=>{const frame=useCurrentFrame();const active=[...lines].reverse().find(line=>frame>=line.start)?.speaker??'student';return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 32%,#15304c 0%,#081522 48%,#040a12 100%)',overflow:'hidden'}}><AudioMix/><div style={{position:'absolute',inset:0,opacity:.16,backgroundImage:'linear-gradient(#6b89a522 1px,transparent 1px),linear-gradient(90deg,#6b89a522 1px,transparent 1px)',backgroundSize:'54px 54px'}}/><div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#02060ddd 0%,transparent 25%,transparent 75%,#02060ddd 100%)'}}/><CharacterLayer active={active} appearance="monochrome"/><Header/><HookScene/><FourTraitsScene/><ChallengeScene/><TwoPlusScene/><GoScene/><TargetScene/><ScoreIntroScene/><PromptScene/><ScoreListScene/><AfterPlanScene/><Caption/></AbsoluteFill>};
+export const TopStudentSample:React.FC=()=>{const frame=useCurrentFrame();const active=[...lines].reverse().find(line=>frame>=line.start)?.speaker??'student';return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 32%,#15304c 0%,#081522 48%,#040a12 100%)',overflow:'hidden'}}><AudioMix/><div style={{position:'absolute',inset:0,opacity:.16,backgroundImage:'linear-gradient(#6b89a522 1px,transparent 1px),linear-gradient(90deg,#6b89a522 1px,transparent 1px)',backgroundSize:'54px 54px'}}/><div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#02060ddd 0%,transparent 25%,transparent 75%,#02060ddd 100%)'}}/><CharacterLayer active={active}/><Header/><HookScene/><FourTraitsScene/><ChallengeScene/><TwoPlusScene/><GoScene/><TargetScene/><ScoreIntroScene/><PromptScene/><ScoreListScene/><AfterPlanScene/><Caption/></AbsoluteFill>};
 
 export {CharacterLayer, Caption, Header, Card};

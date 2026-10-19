@@ -2,3 +2,5 @@ node_modules/
 out/
 .npm-cache/
 public/audio/score.wav
+public/top-student/source/
+public/top-student/sfx/

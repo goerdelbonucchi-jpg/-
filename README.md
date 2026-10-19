@@ -25,3 +25,23 @@ npm run still
 `src/root.tsx` 定义时长、尺寸和帧率。`src/video.tsx` 中的六个场景按时间顺序编排；修改每个场景的字幕、数字、颜色或动画即可调整视频。`scripts/generate-audio.mjs` 中的 `cues` 与场景切点一致。
 
 项目结构参考了 [Remotion 官方 Hello World 模板](https://github.com/remotion-dev/template-helloworld) 的 Composition/入口方式；场景、图形和音乐由本项目独立实现。参考视频中的平台水印没有纳入样片。
+
+## 四种顶级学霸思维 · 开头样片
+
+`TopStudentSample` 是一支 1920×1080、30 fps、约 43 秒的双人对话样片。音乐检测结果约为 107.7 BPM、4/4 拍、F 小调；主要场景变化吸附到小节重拍，卡片等次要动作吸附到普通拍点。
+
+用户提供的源音频不会提交到公开仓库。若要在本地重新渲染，请放置：
+
+```text
+public/top-student/source/music.mp3
+public/top-student/source/student.mp3
+public/top-student/source/teacher.mp3
+```
+
+生成原创乐器音效并渲染：
+
+```bash
+npm run render:student-sample
+```
+
+画面和对白时间轴位于 `src/top-student-sample.tsx`，乐器音效由 `scripts/generate-student-sfx.mjs` 生成。`scripts/analyze_beats.py` 可使用 librosa 重新分析音乐节拍。

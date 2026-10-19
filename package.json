@@ -1,0 +1,22 @@
+{
+  "name": "fortune-shape-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "audio": "node scripts/generate-audio.mjs",
+    "studio": "npm run audio && remotion studio src/index.ts",
+    "render": "npm run audio && remotion render src/index.ts FortuneShape out/fortune-shape.mp4 --browser-executable /usr/bin/chromium",
+    "still": "npm run audio && remotion still src/index.ts FortuneShape out/poster.png --frame 195 --browser-executable /usr/bin/chromium",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.536",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  }
+}

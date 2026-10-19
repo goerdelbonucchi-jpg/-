@@ -66,3 +66,16 @@ write('impact.wav', 1.05, (t) => {
   return 0.55 * Math.sin(Math.PI * 2 * sweep * t) * Math.exp(-t * 4.2) + noise() * Math.exp(-t * 28) * 0.13;
 });
 write('soft-click.wav', 0.22, (t) => 0.35 * partial(930, t, 30) + 0.14 * partial(1395, t, 36));
+
+// Short, restrained opening layers in F minor; leave space for the question.
+write('title-pluck.wav', 0.42, (t) => 0.46 * partial(349.23, t, 12) + 0.17 * partial(698.46, t, 20));
+write('title-chime.wav', 0.85, (t) => 0.32 * partial(698.46, t, 5) + 0.13 * partial(1047.7, t, 7) + 0.06 * partial(1396.92, t, 10));
+let titleLow = 0;
+write('title-air.wav', 0.24, (t) => {
+  titleLow = titleLow * .85 + noise() * .15;
+  return titleLow * Math.sin(Math.PI * t / .24) ** 2 * .7;
+});
+write('title-rise.wav', 16 / 30, (t) => {
+  const p = t / (16 / 30);
+  return (Math.sin(2 * Math.PI * (174.615 * t + 87.3075 * t * p)) * .15 + noise() * .025) * p * p;
+});

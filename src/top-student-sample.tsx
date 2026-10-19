@@ -3,7 +3,6 @@ import captionData from './opening-captions';
 import {
   AbsoluteFill,
   Audio,
-  Img,
   Sequence,
   interpolate,
   spring,
@@ -53,23 +52,49 @@ const Header: React.FC = () => {
 
 const SpeakerTag: React.FC<{side:'left'|'right';label:string;active:boolean;color:string}> = ({side,label,active,color}) => {
   const frame=useCurrentFrame();
+  if (!active) return null;
   return <div style={{position:'absolute',[side]:side==='left'?82:100,top:700,padding:'9px 19px',borderRadius:23,color:active?'#07111f':MUTED,background:active?color:'rgba(7,17,31,.88)',border:`2px solid ${active?color:'#385069'}`,fontFamily:FONT,fontWeight:900,fontSize:22,boxShadow:active?`0 0 24px ${color}55`:'none',transform:`scale(${active?1+Math.sin(frame/7)*.025:.94})`,zIndex:14}}>{active&&<span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'#07111f',marginRight:9,verticalAlign:3}}/>}{label}</div>;
 };
 
+// CSS masks preserve the supplied cutout alpha while tinting only the linework.
 const CharacterLayer: React.FC<{active:Speaker|null}> = ({active}) => {
   const frame=useCurrentFrame();
-  const beat=[...beatFrames].reverse().find((b)=>b<=frame)??0;
-  const pulse=interpolate(frame-beat,[0,7,20],[1,.25,0],clamp);
   return <>
-    <Img src={staticFile('top-student/student-cutout.png')} style={{position:'absolute',left:42,bottom:45,width:410,height:658,objectFit:'contain',objectPosition:'bottom',opacity:active==='teacher'?.48:1,transform:`translateY(${Math.sin(frame/18)*3}px) scale(${active==='student'?1.025:.98})`,transformOrigin:'50% 90%',filter:active==='student'?`drop-shadow(0 0 22px ${STUDENT}55)`:'none'}}/>
-    <Img src={staticFile('top-student/teacher-cutout.png')} style={{position:'absolute',right:26,bottom:34,width:690,height:832,objectFit:'contain',objectPosition:'bottom',opacity:active==='student'?.48:1,transform:`translateY(${Math.sin(frame/20+1)*3}px) scale(${active==='teacher'?1.02:.98})`,transformOrigin:'60% 90%',filter:active==='teacher'?`drop-shadow(0 0 25px ${BLUE}55)`:'none'}}/>
-    <div style={{position:'absolute',left:18,bottom:40,width:450,height:620,borderRadius:'50%',opacity:active==='student'?.20+pulse*.10:0,background:`radial-gradient(circle,${STUDENT}44,transparent 68%)`}}/>
-    <div style={{position:'absolute',right:34,bottom:35,width:650,height:730,borderRadius:'50%',opacity:active==='teacher'?.18+pulse*.08:0,background:`radial-gradient(circle,${BLUE}3d,transparent 69%)`}}/>
-    <SpeakerTag side="left" label="学生" active={active==='student'} color={STUDENT}/><SpeakerTag side="right" label="学霸" active={active==='teacher'} color={BLUE}/>
+    {(['student','teacher'] as const).map((speaker)=>{
+      const student=speaker==='student';
+      const speaking=active===speaker;
+      const color=student?STUDENT:BLUE;
+      const opacity=speaking?1:student?0:.035;
+      const mask=`url("${staticFile(`top-student/${speaker}-cutout.png`)}")`;
+      return <div key={speaker} style={{position:'absolute',left:student?42:undefined,right:student?undefined:26,bottom:student?45:34,width:student?410:690,height:student?658:832,opacity,transform:`translateY(${Math.sin(frame/18)*3}px) scale(${speaking?1.02:.98})`,transformOrigin:'50% 90%',filter:speaking?`drop-shadow(0 0 15px ${color}66)`:'none'}}>
+        <div style={{position:'absolute',inset:0,background:color,maskImage:mask,WebkitMaskImage:mask,maskSize:'contain',WebkitMaskSize:'contain',maskRepeat:'no-repeat',WebkitMaskRepeat:'no-repeat',maskPosition:'center bottom',WebkitMaskPosition:'center bottom'}}/>
+      </div>;
+    })}
+    <SpeakerTag side="left" label="学生" active={active==='student'} color={STUDENT}/>
+    <SpeakerTag side="right" label="学霸" active={active==='teacher'} color={BLUE}/>
   </>;
 };
 
-const HookScene:React.FC=()=>{const frame=useCurrentFrame();const p=pop(frame,62);return <Stage from={0} to={119}><div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',transform:'translateY(-25px)'}}><div style={{fontFamily:FONT,fontSize:23,color:MUTED,letterSpacing:8}}>你能预知吗？</div><div style={{fontFamily:SERIF,color:INK,fontWeight:950,fontSize:68,lineHeight:1.25,textAlign:'center',marginTop:18}}>谁最有潜力<br/><span style={{color:SKY,fontSize:88,display:'inline-block',transform:`scale(${.72+p*.28})`,textShadow:`0 0 34px ${SKY}33`}}>成为顶级学霸</span></div><div style={{width:660,height:6,borderRadius:7,background:`linear-gradient(90deg,transparent,${STUDENT},${SKY},transparent)`,marginTop:28,transform:`scaleX(${p})`}}/></div></Stage>};
+const HookScene:React.FC=()=>{
+  const frame=useCurrentFrame();
+  const question=pop(frame,6,18);
+  const heading=pop(frame,20,17);
+  const keyword=pop(frame,62,14);
+  const sweep=interpolate(frame,[62,85],[-30,130],clamp);
+  return <Stage from={0} to={119}>
+    <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',transform:'translateY(-25px)'}}>
+      <div style={{fontFamily:FONT,fontSize:23,color:MUTED,letterSpacing:8,opacity:question,transform:`translateY(${(1-question)*15}px)`}}>你能预知吗？</div>
+      <div style={{fontFamily:SERIF,color:INK,fontWeight:950,fontSize:68,lineHeight:1.25,textAlign:'center',marginTop:18}}>
+        <div style={{opacity:heading,transform:`translateY(${(1-heading)*30}px) scale(${.94+heading*.06})`,filter:`blur(${Math.max(0,1-heading)*5}px)`}}>谁最有潜力</div>
+        <div style={{position:'relative',color:SKY,fontSize:88,marginTop:10,opacity:keyword,transform:`translateY(${(1-keyword)*22}px) scale(${.86+keyword*.14})`,textShadow:`0 0 ${18+keyword*16}px ${SKY}44`,overflow:'hidden'}}>
+          成为顶级学霸
+          <span aria-hidden style={{position:'absolute',inset:0,color:'#fff',maskImage:`linear-gradient(90deg,transparent ${sweep-12}%,#000 ${sweep}%,transparent ${sweep+12}%)`,WebkitMaskImage:`linear-gradient(90deg,transparent ${sweep-12}%,#000 ${sweep}%,transparent ${sweep+12}%)`,opacity:frame>=62&&frame<86?.55:0,pointerEvents:'none'}}>成为顶级学霸</span>
+        </div>
+      </div>
+      <div style={{width:660,height:6,borderRadius:7,background:`linear-gradient(90deg,transparent,${STUDENT},${SKY},transparent)`,marginTop:28,transform:`scaleX(${keyword})`,boxShadow:`0 0 20px ${SKY}44`}}/>
+    </div>
+  </Stage>;
+};
 
 const FourTraitsScene:React.FC=()=>{const frame=useCurrentFrame();const traits=['目标拆解','失败复盘','主动攻击','知识网络'];const colors=[BLUE,'#c897ff',STUDENT,GREEN];const arrow=pop(frame,246);const future=pop(frame,282);const stamp=pop(frame,315,10);return <Stage from={119} to={351}><div style={{fontFamily:SERIF,fontSize:48,color:INK,fontWeight:950,textAlign:'center'}}>我见过 <span style={{fontSize:82,color:SKY}}>四种</span> 学生</div><div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginTop:28}}>{traits.map((trait,i)=>{const p=pop(frame,188+i*14);return <Card key={trait} style={{height:108,display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',opacity:p,transform:`translateY(${(1-p)*22}px) scale(${.84+p*.16})`,borderColor:`${colors[i]}77`}}><div style={{fontFamily:FONT,color:colors[i],fontWeight:900,fontSize:18}}>0{i+1}</div><div style={{fontFamily:FONT,color:INK,fontWeight:800,fontSize:23,marginTop:4}}>{trait}</div></Card>})}</div><div style={{position:'relative',height:230,marginTop:30}}><Card style={{position:'absolute',left:64,top:25,width:270,height:135,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',fontFamily:FONT,color:MUTED,fontSize:25}}>现在成绩<br/><b style={{color:RED,fontSize:34}}>很不好</b></Card><svg width="430" height="170" style={{position:'absolute',left:330,top:4,overflow:'visible'}}><path d="M15 118 C115 118 135 35 325 45" fill="none" stroke={SKY} strokeWidth="6" strokeLinecap="round" strokeDasharray="520" strokeDashoffset={520*(1-arrow)}/><path d="M306 29 L334 45 L306 62" fill="none" stroke={SKY} strokeWidth="6" strokeLinecap="round" opacity={arrow}/></svg><Card style={{position:'absolute',right:65,top:6,width:280,height:170,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',fontFamily:SERIF,color:SKY,fontSize:44,fontWeight:950,borderColor:`${SKY}88`,transform:`scale(${.8+future*.2})`,opacity:future}}>将来必然<br/>成为学霸</Card><div style={{position:'absolute',right:6,top:142,border:`6px solid ${RED}`,color:RED,fontFamily:FONT,fontSize:30,fontWeight:950,letterSpacing:5,padding:'9px 16px',transform:`rotate(-7deg) scale(${.65+stamp*.35})`,opacity:stamp}}>无一例外</div></div></Stage>};
 
@@ -107,13 +132,19 @@ const AfterPlanScene: React.FC = () => {
 };
 
 const sfx=[
-  {at:62,file:'piano-low.wav',volume:.18},
+  // Small layered attacks share the exact frames of the opening animation.
+  {at:0,file:'title-air.wav',volume:.11},
+  {at:6,file:'title-pluck.wav',volume:.12},
+  {at:20,file:'marimba-f.wav',volume:.12},
+  {at:46,file:'title-rise.wav',volume:.09},
+  {at:62,file:'piano-low.wav',volume:.13},
+  {at:62,file:'title-chime.wav',volume:.10},
   ...[188,202,216,230].map((at,i)=>({at,file:['marimba-f.wav','marimba-ab.wav','marimba-c.wav','marimba-eb.wav'][i],volume:.13})),
   {at:246,file:'harp-rise.wav',volume:.14},{at:282,file:'bell.wav',volume:.11},{at:315,file:'impact.wav',volume:.16},
   {at:351,file:'pizzicato.wav',volume:.16},{at:377,file:'woodblock.wav',volume:.11},
   {at:440,file:'woodblock.wav',volume:.13},{at:449,file:'woodblock.wav',volume:.13},{at:472,file:'bell.wav',volume:.14},
   {at:507,file:'pizzicato.wav',volume:.16},{at:544,file:'impact.wav',volume:.16},{at:566,file:'harp-rise.wav',volume:.13},{at:641,file:'marimba-ab.wav',volume:.13},
-  ...[726,736,746,756].map(at=>({at,file:'soft-click.wav',volume:.09})),
+  ...[726,736,746,756,766,776].map(at=>({at,file:'soft-click.wav',volume:.09})),
   ...[784,988,1026].map(at=>({at,file:'pizzicato.wav',volume:.16})),
   ...[836,872,908,944].map(at=>({at,file:'soft-click.wav',volume:.11})),
   ...[1063,1070,1077,1084,1091,1098].map(at=>({at,file:'woodblock.wav',volume:.09})),
@@ -121,4 +152,4 @@ const sfx=[
 
 const AudioMix:React.FC=()=>{const frame=useCurrentFrame();const talking=lines.some((line)=>frame>=line.start&&frame<line.end);return <><Audio src={staticFile('top-student/source/music.mp3')} volume={talking?.065:.10}/><Audio src={staticFile('top-student/source/full-dialogue-sync.wav')} volume={.70}/>{sfx.map((x,i)=><Sequence key={`${x.at}-${i}`} from={x.at}><Audio src={staticFile(`top-student/sfx/${x.file}`)} volume={x.volume}/></Sequence>)}</>};
 
-export const TopStudentSample:React.FC=()=>{const frame=useCurrentFrame();const active=lines.find((line)=>frame>=line.start&&frame<line.end)?.speaker??null;return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 32%,#15304c 0%,#081522 48%,#040a12 100%)',overflow:'hidden'}}><AudioMix/><div style={{position:'absolute',inset:0,opacity:.16,backgroundImage:'linear-gradient(#6b89a522 1px,transparent 1px),linear-gradient(90deg,#6b89a522 1px,transparent 1px)',backgroundSize:'54px 54px'}}/><div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#02060ddd 0%,transparent 25%,transparent 75%,#02060ddd 100%)'}}/><CharacterLayer active={active}/><Header/><HookScene/><FourTraitsScene/><ChallengeScene/><TwoPlusScene/><GoScene/><TargetScene/><ScoreIntroScene/><PromptScene/><ScoreListScene/><AfterPlanScene/><Caption/></AbsoluteFill>};
+export const TopStudentSample:React.FC=()=>{const frame=useCurrentFrame();const active=[...lines].reverse().find(line=>frame>=line.start)?.speaker??'student';return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 32%,#15304c 0%,#081522 48%,#040a12 100%)',overflow:'hidden'}}><AudioMix/><div style={{position:'absolute',inset:0,opacity:.16,backgroundImage:'linear-gradient(#6b89a522 1px,transparent 1px),linear-gradient(90deg,#6b89a522 1px,transparent 1px)',backgroundSize:'54px 54px'}}/><div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#02060ddd 0%,transparent 25%,transparent 75%,#02060ddd 100%)'}}/><CharacterLayer active={active}/><Header/><HookScene/><FourTraitsScene/><ChallengeScene/><TwoPlusScene/><GoScene/><TargetScene/><ScoreIntroScene/><PromptScene/><ScoreListScene/><AfterPlanScene/><Caption/></AbsoluteFill>};

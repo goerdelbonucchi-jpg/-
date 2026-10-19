@@ -23,8 +23,8 @@ const FONT = '"Noto Sans CJK SC", "Microsoft YaHei", sans-serif';
 const SERIF = '"Noto Serif CJK SC", "Songti SC", serif';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 
-type Speaker = 'student' | 'teacher';
-type Line = {speaker: Speaker; start: number; end: number; text: string; emphasis: string[]};
+export type Speaker = 'student' | 'teacher';
+export type Line = {speaker: Speaker; start: number; end: number; text: string; emphasis: string[]};
 
 // Source SRT text, mapped through matched audio runs and turn silence boundaries.
 const lines: Line[] = captionData.map((line) => ({...line, speaker: line.speaker as Speaker}));
@@ -42,11 +42,11 @@ const Card: React.FC<{children: React.ReactNode; style?: React.CSSProperties}> =
   <div style={{background:'rgba(8,24,39,.94)',border:'2px solid #3a5874',borderRadius:24,boxShadow:'0 16px 40px rgba(0,0,0,.28)',...style}}>{children}</div>
 );
 
-const Header: React.FC = () => {
+const Header: React.FC<{chapter?:number}> = ({chapter}) => {
   const frame = useCurrentFrame();
   return <div style={{position:'absolute',left:58,right:58,top:30,height:58,display:'flex',alignItems:'center',justifyContent:'space-between',fontFamily:FONT,zIndex:20}}>
     <div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:9,height:38,borderRadius:8,background:SKY,boxShadow:`0 0 18px ${SKY}88`}}/><div style={{fontWeight:900,fontSize:26,color:INK,letterSpacing:2}}>四种顶级学霸思维</div><div style={{fontSize:19,color:SKY,background:'#10253a',borderRadius:20,padding:'6px 15px',fontWeight:700,border:'1px solid #2c536d'}}>命中越多 · 涨分越快</div></div>
-    <div style={{display:'flex',gap:8}}>{[0,1,2,3].map((i)=><div key={i} style={{width:42,height:5,borderRadius:8,background:frame>=784+i*500?BLUE:'#293b4f'}}/>)}</div>
+    <div style={{display:'flex',gap:8}}>{[0,1,2,3].map((i)=><div key={i} style={{width:42,height:5,borderRadius:8,background:(chapter!==undefined?i<chapter:frame>=784+i*500)?BLUE:'#293b4f'}}/>)}</div>
   </div>;
 };
 
@@ -114,7 +114,7 @@ const ScoreListScene:React.FC=()=>{const frame=useCurrentFrame();const data=[{na
 
 const HighlightedText:React.FC<{line:Line}>=({line})=>{const terms=[...line.emphasis].sort((a,b)=>b.length-a.length);const pattern=new RegExp(`(${terms.map((term)=>term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')})`);return <>{line.text.split(pattern).map((part,i)=>terms.includes(part)?<span key={i} style={{color:line.speaker==='student'?STUDENT:BLUE,fontWeight:950}}>{part}</span>:part)}</>};
 
-const Caption:React.FC=()=>{const frame=useCurrentFrame();const line=lines.find((item)=>frame>=item.start&&frame<item.end);if(!line)return null;const enter=1;const color=line.speaker==='student'?STUDENT:BLUE;return <div style={{position:'absolute',left:390,right:390,bottom:30,minHeight:158,background:'linear-gradient(180deg,rgba(10,23,37,.96),rgba(4,11,19,.98))',border:`2px solid ${color}66`,borderRadius:26,boxShadow:'0 18px 52px rgba(0,0,0,.48)',padding:'17px 34px 21px',boxSizing:'border-box',zIndex:30,opacity:enter,transform:`translateY(${(1-enter)*18}px)`}}><div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,color,fontFamily:FONT,fontSize:18,fontWeight:900,letterSpacing:4}}><span style={{width:8,height:8,borderRadius:'50%',background:color,boxShadow:`0 0 12px ${color}`}}/>{line.speaker==='student'?'学生':'学霸'}</div><div style={{fontFamily:FONT,color:INK,fontSize:line.text.length>42?33:38,fontWeight:760,lineHeight:1.42,textAlign:'center',marginTop:5}}><HighlightedText line={line}/></div></div>};
+const Caption:React.FC<{captions?:Line[]}>=({captions=lines})=>{const frame=useCurrentFrame();const line=captions.find((item)=>frame>=item.start&&frame<item.end);if(!line)return null;const enter=1;const color=line.speaker==='student'?STUDENT:BLUE;return <div style={{position:'absolute',left:390,right:390,bottom:30,minHeight:158,background:'linear-gradient(180deg,rgba(10,23,37,.96),rgba(4,11,19,.98))',border:`2px solid ${color}66`,borderRadius:26,boxShadow:'0 18px 52px rgba(0,0,0,.48)',padding:'17px 34px 21px',boxSizing:'border-box',zIndex:30,opacity:enter,transform:`translateY(${(1-enter)*18}px)`}}><div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,color,fontFamily:FONT,fontSize:18,fontWeight:900,letterSpacing:4}}><span style={{width:8,height:8,borderRadius:'50%',background:color,boxShadow:`0 0 12px ${color}`}}/>{line.speaker==='student'?'学生':'学霸'}</div><div style={{fontFamily:FONT,color:INK,fontSize:line.text.length>42?33:38,fontWeight:760,lineHeight:1.42,textAlign:'center',marginTop:5}}><HighlightedText line={line}/></div></div>};
 
 const AfterPlanScene: React.FC = () => {
   const frame = useCurrentFrame();
@@ -153,3 +153,5 @@ const sfx=[
 const AudioMix:React.FC=()=>{const frame=useCurrentFrame();const talking=lines.some((line)=>frame>=line.start&&frame<line.end);return <><Audio src={staticFile('top-student/source/music.mp3')} volume={talking?.065:.10}/><Audio src={staticFile('top-student/source/full-dialogue-sync.wav')} volume={.70}/>{sfx.map((x,i)=><Sequence key={`${x.at}-${i}`} from={x.at}><Audio src={staticFile(`top-student/sfx/${x.file}`)} volume={x.volume}/></Sequence>)}</>};
 
 export const TopStudentSample:React.FC=()=>{const frame=useCurrentFrame();const active=[...lines].reverse().find(line=>frame>=line.start)?.speaker??'student';return <AbsoluteFill style={{background:'radial-gradient(circle at 50% 32%,#15304c 0%,#081522 48%,#040a12 100%)',overflow:'hidden'}}><AudioMix/><div style={{position:'absolute',inset:0,opacity:.16,backgroundImage:'linear-gradient(#6b89a522 1px,transparent 1px),linear-gradient(90deg,#6b89a522 1px,transparent 1px)',backgroundSize:'54px 54px'}}/><div style={{position:'absolute',inset:0,background:'linear-gradient(90deg,#02060ddd 0%,transparent 25%,transparent 75%,#02060ddd 100%)'}}/><CharacterLayer active={active}/><Header/><HookScene/><FourTraitsScene/><ChallengeScene/><TwoPlusScene/><GoScene/><TargetScene/><ScoreIntroScene/><PromptScene/><ScoreListScene/><AfterPlanScene/><Caption/></AbsoluteFill>};
+
+export {CharacterLayer, Caption, Header, Card};

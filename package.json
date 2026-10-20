@@ -11,7 +11,8 @@
     "still:student-sample": "npm run sfx:student && remotion still src/index.ts TopStudentSample out/top-student-opening.png --frame 574 --browser-executable /usr/bin/chromium",
     "still": "npm run audio && remotion still src/index.ts FortuneShape out/poster.png --frame 195 --browser-executable /usr/bin/chromium",
     "check": "tsc --noEmit",
-    "render:student-part-two": "npm run sfx:student && remotion render src/index.ts TopStudentPartTwo out/top-student-part-two.mp4 --browser-executable /usr/bin/chromium"
+    "render:student-part-two": "npm run sfx:student && remotion render src/index.ts TopStudentPartTwo out/top-student-part-two.mp4 --browser-executable /usr/bin/chromium",
+    "render:student-part-three": "npm run sfx:student && remotion render src/index.ts TopStudentPartThree out/top-student-part-three.mp4 --browser-executable /usr/bin/chromium"
   },
   "dependencies": {
     "@remotion/cli": "4.0.536",

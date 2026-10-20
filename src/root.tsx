@@ -3,6 +3,7 @@ import {FortuneShape} from './video';
 import {TopStudentSample} from './top-student-sample';
 import {TopStudentPartTwo, PART_TWO_DURATION} from './top-student-part-two';
 import {TopStudentPartThree, PART_THREE_DURATION} from './top-student-part-three';
+import {TopStudentPartFour, PART_FOUR_DURATION} from './top-student-part-four';
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -31,5 +32,6 @@ export const RemotionRoot: React.FC = () => (
       height={1080}
     />
     <Composition id="TopStudentPartThree" component={TopStudentPartThree} durationInFrames={PART_THREE_DURATION} fps={30} width={1920} height={1080}/>
+    <Composition id="TopStudentPartFour" component={TopStudentPartFour} durationInFrames={PART_FOUR_DURATION} fps={30} width={1920} height={1080}/>
   </>
 );

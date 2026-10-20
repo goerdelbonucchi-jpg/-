@@ -8,6 +8,8 @@ import {TopStudentPartFive, PART_FIVE_DURATION} from './top-student-part-five';
 
 import {TopStudentPartSix, PART_SIX_DURATION} from './top-student-part-six';
 
+import {TopStudentPartSeven, PART_SEVEN_DURATION} from './top-student-part-seven';
+
 export const RemotionRoot: React.FC = () => (
   <>
     <Composition
@@ -38,5 +40,6 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="TopStudentPartFour" component={TopStudentPartFour} durationInFrames={PART_FOUR_DURATION} fps={30} width={1920} height={1080}/>
     <Composition id="TopStudentPartFive" component={TopStudentPartFive} durationInFrames={PART_FIVE_DURATION} fps={30} width={1920} height={1080}/>
     <Composition id="TopStudentPartSix" component={TopStudentPartSix} durationInFrames={PART_SIX_DURATION} fps={30} width={1920} height={1080}/>
+    <Composition id="TopStudentPartSeven" component={TopStudentPartSeven} durationInFrames={PART_SEVEN_DURATION} fps={30} width={1920} height={1080}/>
   </>
 );

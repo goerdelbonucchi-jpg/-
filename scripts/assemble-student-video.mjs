@@ -1,0 +1,34 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import vm from 'node:vm';
+const names=['opening','second','third','fourth','fifth','sixth','seventh','eighth'];
+const sources=['sample','part-two','part-three','part-four','part-five','part-six','part-seven','part-eight'];
+const videos=['opening-v8-music15','part-two-v3-music15','part-three','part-four','part-five','part-six','part-seven','part-eight'];
+const lengths=[1224,1152,1566,1146,1539,1332,1149,972];
+mkdirSync('out/full-assembly',{recursive:true});
+let offset=0;const captions=[],effects=[],parts=[];
+for(let i=0;i<8;i++){
+ const s=readFileSync(`src/top-student-${sources[i]}.tsx`,'utf8');
+ const name=i===0?'sfx':'effects';
+ const start=s.indexOf(`const ${name}=`)+`const ${name}=`.length;
+ const end=s.indexOf(';',start);
+ const list=vm.runInNewContext('('+s.slice(start,end)+')',{}, {timeout:1000});
+ for(const x of list)effects.push({...x,at:x.at+offset,volume:x.volume??(x.file==='soft-click.wav'?.09:.12)});
+ const cues=JSON.parse(readFileSync(`src/${names[i]}-captions.ts`,'utf8').replace(/^export default\s*/,'').replace(/;\s*$/,''));
+ for(const x of cues)captions.push({...x,start:x.start+offset,end:x.end+offset});
+ const input=`demo/top-student-${videos[i]}.mp4`,path=`out/full-assembly/part-${i+1}.mp4`;
+ execFileSync('ffmpeg',['-y','-v','error','-i',input,'-map','0:v:0','-an','-c:v','copy',path]);
+ parts.push(`file 'part-${i+1}.mp4'\nduration ${lengths[i]/30}`);
+ offset+=lengths[i];
+}
+if(offset!==10080)throw new Error('Unexpected total frames');
+for(let i=0;i<captions.length;i++)if(captions[i].end<=captions[i].start||(i&&captions[i].start<captions[i-1].end))throw new Error('Overlapping subtitles');
+writeFileSync('out/full-assembly/manifest.json',JSON.stringify({frames:offset,captions,effects},null,2));
+writeFileSync('out/full-assembly/concat.txt',parts.join('\n')+'\n');
+const stamp=f=>{const n=Math.round(f/30*1000);return `${String(Math.floor(n/3600000)).padStart(2,'0')}:${String(Math.floor(n/60000)%60).padStart(2,'0')}:${String(Math.floor(n/1000)%60).padStart(2,'0')},${String(n%1000).padStart(3,'0')}`};
+writeFileSync('subtitles/full-captions.srt',captions.map((x,i)=>`${i+1}\n${stamp(x.start)} --> ${stamp(x.end)}\n${x.text}`).join('\n\n')+'\n');
+execFileSync('node',['scripts/build-continuous-music.mjs'],{stdio:'inherit'});
+execFileSync('python3',['scripts/mix-full-audio.py'],{stdio:'inherit'});
+execFileSync('ffmpeg',['-y','-v','error','-f','concat','-safe','0','-i','out/full-assembly/concat.txt','-i','out/full-assembly/mix.wav','-i','subtitles/full-captions.srt','-map','0:v:0','-map','1:a:0','-map','2:0','-c:v','copy','-c:a','aac','-b:a','192k','-c:s','mov_text','-metadata:s:s:0','language=zho','-t','336','-movflags','+faststart','out/top-student-full-master.mp4'],{stdio:'inherit'});
+execFileSync('ffmpeg',['-y','-v','error','-i','out/top-student-full-master.mp4','-map','0','-c:v','libx264','-preset','fast','-b:v','1800k','-maxrate','2000k','-bufsize','4000k','-pix_fmt','yuv420p','-c:a','copy','-c:s','copy','-movflags','+faststart','demo/top-student-full.mp4'],{stdio:'inherit'});
+console.log(`Assembled ${offset} frames, ${captions.length} subtitles, ${effects.length} sound effects.`);
